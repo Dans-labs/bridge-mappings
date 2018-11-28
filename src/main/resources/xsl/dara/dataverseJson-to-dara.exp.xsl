@@ -109,7 +109,7 @@
   <xsl:template name="doiProposal" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
     <xsl:variable name="AuthoriyValue" select="map[1]/map[1]/string[@key='authority']"/>
     <xsl:variable name="identifier" select="map[1]/map[1]/string[@key='identifier']"/>
-    <doiProposal>10.5072/NXNRCD</doiProposal>
+    <doiProposal></doiProposal>
   </xsl:template>
 
   <xsl:template name="publicationDate" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
