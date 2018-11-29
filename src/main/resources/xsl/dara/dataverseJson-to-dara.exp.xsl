@@ -26,7 +26,7 @@
       <xsl:call-template name="rights"/>
       <xsl:call-template name="freeKeywords"/>
       <xsl:call-template name="descriptions"/>
-      <xsl:call-template name="dataSets"/>
+<!--       <xsl:call-template name="dataSets"/> -->
       <xsl:call-template name="publications"/>
     </resource>
   </xsl:template>
@@ -177,7 +177,7 @@
       </description>
     </descriptions>
   </xsl:template>
-  <xsl:template name="dataSets" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
+<!--   <xsl:template name="dataSets" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
     <dataSets>
       <xsl:for-each select="//array[@key='files']/map[*]">
         <dataSet>
@@ -197,7 +197,7 @@
         </dataSet>
       </xsl:for-each>
     </dataSets>
-  </xsl:template>
+  </xsl:template> -->
 
   <xsl:template name="publications" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
     <publications>
