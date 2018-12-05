@@ -1,9 +1,12 @@
 <xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns="http://da-ra.de/schema/kernel-4">
+                xmlns="http://da-ra.de/schema/kernel-4"
+                xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+                xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
     <xsl:output indent="yes"/>
     <xsl:strip-space elements="*"/>
 
     <xsl:param name="dvnJson"/>
+    <xsl:param name="langdict"/>
 
     <xsl:mode on-no-match="shallow-copy"/>
 
@@ -11,10 +14,9 @@
         <xsl:apply-templates select="json-to-xml($dvnJson)"/>
     </xsl:template>
 
-    <xsl:template match="/" xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
-         
+    <xsl:template match="/" xpath-default-namespace="http://www.w3.org/2005/xpath-functions">         
         <resource>
-            <resourceType>Collection</resourceType>
+            <resourceType>Dataset</resourceType>
             <xsl:call-template name="resourceIdentifier"/>
             <xsl:call-template name="titles"/>
             <xsl:call-template name="creators"/>
@@ -33,15 +35,15 @@
  
     
     <xsl:template name="resourceIdentifier"  match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
-        <xsl:variable name="versionStateR" select="map[1]/map[1]/map[1]/string[@key='versionState']"/>
+        <xsl:variable name="versionStateR" select="map/map/map/string[@key='versionState']"/>
         <xsl:choose>
             <xsl:when  test="$versionStateR = 'RELEASED'">
                 <resourceIdentifier>
                     <identifier>
-                        <xsl:value-of select="map[1]/map[1]/string[@key='identifier']"/>
+                        <xsl:value-of select="map/map/string[@key='identifier']"/>
                     </identifier>
-                    <xsl:variable name="versionNumber" select="map[1]/map[1]/map[1]/number[@key='versionNumber']"/>
-                    <xsl:variable name="versionMinorNumber" select="map[1]/map[1]/map[1]/number[@key='versionMinorNumber']"/>
+                    <xsl:variable name="versionNumber" select="map/map/map/number[@key='versionNumber']"/>
+                    <xsl:variable name="versionMinorNumber" select="map/map/map/number[@key='versionMinorNumber']"/>
                     <currentVersion>
                         <xsl:value-of select="concat($versionNumber, '.', $versionMinorNumber)"/>
                     </currentVersion>
@@ -50,43 +52,49 @@
             <xsl:otherwise>
                 <resourceIdentifier>
                     <identifier>
-                        <xsl:value-of select="map[1]/map[1]/number[@key='id']"/>
+                        <xsl:value-of select="map/map/number[@key='id']"/>
                     </identifier>
-                    <currentVersion/>
+                    <currentVersion>1</currentVersion>
                 </resourceIdentifier>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
+    
+    
     <xsl:template name="titles" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <titles>
             <title>
                 <language>en</language>
                 <titleName>
-                    <xsl:value-of select="//array[@key='fields']/map[1]/string[@key='value']/."/>
+                    <xsl:value-of select="//array[@key='fields']/map/string[@key='typeName' and text()='title']/following-sibling::string[@key='value']/."/>
                 </titleName>
             </title>
         </titles>
     </xsl:template>
+    
     <xsl:template name="creators" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <creators>
+         <xsl:for-each select="//map[@key='authorName']">
+            <xsl:variable name="intial" select="substring-after(./string[@key='typeName' and text()='authorName']/following-sibling::string[@key='value']/., ', ')"/>
+            <xsl:variable name="surname" select="substring-before(./string[@key='typeName' and text()='authorName']/following-sibling::string[@key='value']/., ', ')"/>
             <creator>
                 <person>
-                    <xsl:variable name="name" select="tokenize(//array[1]/map[2]/array[1]/map[1]/map[1]/string[3], ',')"/>
                     <firstName>
-                        <xsl:value-of select="$name[2]"/>
+                        <xsl:value-of select="substring($intial, 1, 1)"/>
                     </firstName>
                     <lastName>
-                        <xsl:value-of select="$name[1]"/>
+                        <xsl:value-of select="$surname"/>
                     </lastName>
                 </person>
             </creator>
             <creator>
                 <institution>
                     <institutionName>
-                        <xsl:value-of select="//array[1]/map[2]/array[1]/map[1]/map[2]/string[3]"/>
+                        <xsl:value-of select="//string[@key='typeName' and text()='authorAffiliation']/following-sibling::string[@key='value']/."/>
                     </institutionName>
                 </institution>
             </creator>
+        </xsl:for-each>
         </creators>
     </xsl:template>
    
@@ -109,28 +117,29 @@
     <xsl:template name="doiProposal" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <xsl:variable name="AuthoriyValue" select="map[1]/map[1]/string[@key='authority']"/>
         <xsl:variable name="identifier" select="map[1]/map[1]/string[@key='identifier']"/>
-        <doiProposal>
-            <xsl:value-of select="concat($AuthoriyValue, '/', $identifier)"/>
-        </doiProposal>
+        <xsl:if test="$AuthoriyValue and  $identifier">
+        	<doiProposal>
+            	<xsl:value-of select="concat($AuthoriyValue, '/', $identifier)"/>
+        	</doiProposal>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template name="publicationDate" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
-        <xsl:variable name="versionStateR" select="/map/map[@key='data']/string[@key='versionState']/."/>
-            <xsl:if test="$versionStateR = 'RELEASED'">
+        <xsl:variable name="pdate" select="/map[1]/map[1]/string[@key='publicationDate']/."/>
                 <publicationDate>
-                    <date>
-                        <xsl:value-of select="map[1]/map[1]/string[@key='publicationDate']"/>
-                    </date>
+                	<date>
+                	<xsl:choose>
+                		<xsl:when  test="$pdate">
+                			<xsl:value-of select="map[1]/map[1]/string[@key='publicationDate']"/>	
+                        </xsl:when>
+                        <xsl:otherwise>
+                        	<xsl:value-of select="format-dateTime(current-dateTime(), '[Y0001]-[M01]-[D01]')"/>
+                    	</xsl:otherwise>
+                   </xsl:choose> 
+                    </date>                  		
                 </publicationDate>
-            </xsl:if>
-            <xsl:if test="$versionStateR = 'DRAFT'">
-                <publicationDate>
-                    <date>
-                        <xsl:value-of select="format-dateTime(current-dateTime(), '[Y0001]-[M01]-[D01]')"/>
-                    </date>
-                </publicationDate>
-            </xsl:if>
     </xsl:template>
+    
     <xsl:template name="rights" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <xsl:variable name="versionStateR" select="map[1]/map[1]/map[1]/string[@key='versionState']"/>
         <xsl:if  test="$versionStateR = 'RELEASED'">
@@ -147,20 +156,37 @@
             </rights>
         </xsl:if>
     </xsl:template>
-  
-    <xsl:template name="resourceLanguage" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
-        <resourceLanguage>eng</resourceLanguage>
-    </xsl:template>
    
+	<xsl:template name="resourceLanguage" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
+		<resourceLanguage>
+			<xsl:choose>
+				<xsl:when test="count(/map/map/map[@key='metadataBlocks']/map[@key='citation']/array[@key='fields']/map/string[@key='typeName' and text()='language']/following-sibling::array[@key='value']/string/.) > 0">
+					<xsl:for-each select="/map/map/map[@key='metadataBlocks']/map[@key='citation']/array[@key='fields']/map/string[@key='typeName' and text()='language']/following-sibling::array[@key='value']/string/.">
+ 						<xsl:if test="position()=1">
+ 							<xsl:choose>
+                				<xsl:when test="map:get($langdict,.)">
+        							<xsl:value-of select ="map:get($langdict,.)"/>
+        						</xsl:when>
+                    			<xsl:otherwise>
+                    				eng
+                    			</xsl:otherwise>
+                 			</xsl:choose>
+                 		</xsl:if>
+    				</xsl:for-each>
+    			</xsl:when>
+    			<xsl:otherwise>eng</xsl:otherwise>
+    		</xsl:choose>
+    	</resourceLanguage>
+    </xsl:template>
    
     <xsl:template name="freeKeywords" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <freeKeywords>
             <freeKeyword>
             <language>en</language>
             <keywords>
-                <xsl:for-each select="//array[1]/map[6]/array[1]/map[*]/map[@key='keywordValue']">
+                <xsl:for-each select="/map/map/map[@key='metadataBlocks']/map[@key='citation']/array[@key='fields']/map/string[@key='typeName' and text()='keyword']/following-sibling::array[@key='value']/map/.">
                     <keyword>
-                        <xsl:value-of select="string[3]"/>
+                        <xsl:value-of select="./map[@key='keywordValue']/string[@key='value']/."/>
                     </keyword>
                 </xsl:for-each>
             </keywords>
@@ -173,14 +199,14 @@
             <description>
                 <language>en</language>
                 <freetext>
-                    <xsl:value-of select="//array[1]/map[4]/array[1]/map[1]/map[1]/string[3]"/>
+                    <xsl:value-of select="//map[@key='dsDescriptionValue']/string[@key='typeName' and text()='dsDescriptionValue']/following-sibling::string[@key='value']/."/>
                 </freetext>
                 <descriptionType>Abstract</descriptionType>
             </description>
         </descriptions>
     </xsl:template>
     <xsl:template name="dataSets" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
-        <dataSets>
+    <dataSets>
             <xsl:for-each select="//array[@key='files']/map[*]">
                 <dataSet>
                     <files>
@@ -203,11 +229,10 @@
         
     <xsl:template name="publications" match="." xpath-default-namespace="http://www.w3.org/2005/xpath-functions">
         <publications>
-            <xsl:for-each select="//array[1]/map[7]/array[1]/map[*]">
                 <publication>
                     <unstructuredPublication>
                         <freetext>
-                            <xsl:value-of select="map[@key='publicationCitation']/string[@key='value']"/>
+                            <xsl:value-of select="/map/map/map[@key='metadataBlocks']/map[@key='citation']/array[@key='fields']/map/array/map/map[@key='publicationCitation']/string[@key='value']/."/>
                         </freetext>
                         
                         <xsl:variable name="pubIDNumber1" select="map[@key='publicationIDNumber']/string[@key='value']/."/>
@@ -227,7 +252,6 @@
 
                     </unstructuredPublication>
                 </publication>
-            </xsl:for-each>
         </publications>
     </xsl:template>
     
