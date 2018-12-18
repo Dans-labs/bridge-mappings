@@ -43,7 +43,7 @@ public class DataverseJsonToDaraXml {
     
     public static void main(String [] args) throws SaxonApiException, IOException
 	{
-    	final String xsltPath = "src/main/resources/dataverseJson-to-DaraXml.xsl";
+    	final String xsltPath = "src/main/resources/xsl/dara/dataverseJson-to-DaraXml.xsl";
     	final String dvnJsonMetadataUrl ="https://raw.githubusercontent.com/Dans-labs/bridge-mappings/development/src/test/resources/json/DRAFT-doi-10.5072-HK10D12SA.json ";
     	String result = convert(xsltPath, dvnJsonMetadataUrl);
     	String[] splitedstring=dvnJsonMetadataUrl.split("/");
