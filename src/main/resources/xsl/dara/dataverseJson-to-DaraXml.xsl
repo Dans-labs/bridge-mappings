@@ -6,7 +6,6 @@
     <xsl:strip-space elements="*"/>
 
     <xsl:param name="dvnJson"/>
-    <xsl:param name="langdict"/>
 
     <xsl:mode on-no-match="shallow-copy"/>
 
@@ -80,7 +79,7 @@
             <creator>
                 <person>
                     <firstName>
-                        <xsl:value-of select="substring($intial, 1, 1)"/>
+                        <xsl:value-of select="$intial"/>
                     </firstName>
                     <lastName>
                         <xsl:value-of select="$surname"/>
@@ -164,12 +163,12 @@
 					<xsl:for-each select="/map/map/map[@key='metadataBlocks']/map[@key='citation']/array[@key='fields']/map/string[@key='typeName' and text()='language']/following-sibling::array[@key='value']/string/.">
  						<xsl:if test="position()=1">
  							<xsl:choose>
-                				<xsl:when test="map:get($langdict,.)">
-        							<xsl:value-of select ="map:get($langdict,.)"/>
+ 								<xsl:when test="(.='Dutch') or (.='English') or (.='Latin')">
+ 									<xsl:if test=".='Dutch'">dut</xsl:if>
+ 									<xsl:if test=".='English'">eng</xsl:if>
+ 									<xsl:if test=".='Latin'">lat</xsl:if>
         						</xsl:when>
-                    			<xsl:otherwise>
-                    				eng
-                    			</xsl:otherwise>
+                    			<xsl:otherwise>eng</xsl:otherwise>
                  			</xsl:choose>
                  		</xsl:if>
     				</xsl:for-each>

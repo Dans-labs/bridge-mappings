@@ -40,23 +40,6 @@ public class DataverseJsonToDaraXml {
     private static final String PARAM_DVN_JSON = "dvnJson";
     private static final String PARAM_LANG_DICT = "langdict";
     
-    public static Map<String, String> getMapfromJson(String path)
-	{
-    	try {
-             ObjectMapper mapper = new ObjectMapper();
-             Map<String, String> map = mapper.readValue(
- 					new File(path), 
- 					new TypeReference<Map<String, String>>() {
- 			});
- 			// convert JSON string to Map
-             //System.out.println(map.get("Mursi"));
-             return map;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-	}
-    
     public static String convert(String xsltSourceUrl, String dvnJsonMetadataSourceUrl) throws SaxonApiException, IOException {
         LOG.debug("xsltSourceUrl: {} \tdvnJsonMetadataSourceUrl: {}", xsltSourceUrl, dvnJsonMetadataSourceUrl);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -66,7 +49,6 @@ public class DataverseJsonToDaraXml {
         XsltExecutable executable = compiler.compile(new StreamSource(xsltSourceUrl));
         XsltTransformer transformer = executable.load();
         transformer.setInitialTemplate(new QName(INITIAL_TEMPLATE));
-        transformer.setParameter(new QName(PARAM_LANG_DICT), XdmMap.makeMap(getMapfromJson("src/main/resources/xsl/dara/dict_lang_map_resource.json")));
         transformer.setParameter(new QName(PARAM_DVN_JSON), new XdmAtomicValue(IOUtils.toString(new URL(dvnJsonMetadataSourceUrl), StandardCharsets.UTF_8)));
         transformer.setDestination(serializer);
         transformer.transform();
@@ -76,7 +58,7 @@ public class DataverseJsonToDaraXml {
     public static void main(String [] args) throws SaxonApiException, IOException
 	{
     	final String xsltPath = "src/main/resources/xsl/dara/dataverseJson-to-DaraXml.xsl";
-    	final String dvnJsonMetadataUrl ="https://raw.githubusercontent.com/Dans-labs/bridge-mappings/development/src/test/resources/json/hdl-12345-EWKZSR.json ";
+        final String dvnJsonMetadataUrl ="https://raw.githubusercontent.com/Dans-labs/bridge-mappings/development/src/test/resources/json/DRAFT-doi-10.5072-HK10D12SA.json ";
     	String result = convert(xsltPath, dvnJsonMetadataUrl);
     	String[] splitedstring=dvnJsonMetadataUrl.split("/");
     	File file = new File("src/main/resources/data/"+splitedstring[splitedstring.length-1].replaceAll(".json", ".xml"));
