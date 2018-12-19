@@ -11,10 +11,18 @@
  								<xsl:choose>
  									<xsl:when test="(.='Dutch') 
  									or (.='English') 
- 									or (.='Latin')">
+ 									or (.='Latin')"
+ 									or (.='French')
+ 									or (.='Italian')
+ 									or (.='Swedish')
+ 									or (.='Slovenian')>
 										<xsl:if test=".='Dutch'">dut</xsl:if>
 										<xsl:if test=".='English'">eng</xsl:if>
 										<xsl:if test=".='Latin'">lat</xsl:if>
+										<xsl:if test=".='French'">fre</xsl:if>
+										<xsl:if test=".='Italian'">ita</xsl:if>
+										<xsl:if test=".='Swedish'">swe</xsl:if>
+										<xsl:if test=".='Slovenian'">slv</xsl:if>
 									</xsl:when>
                     			<xsl:otherwise>eng</xsl:otherwise>
                  			</xsl:choose>
